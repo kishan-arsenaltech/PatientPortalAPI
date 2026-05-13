@@ -1,11 +1,12 @@
 using System.Security.Cryptography;
 using System.Text;
+using PatientPortalAPI.Core.Application.Constants;
 
 namespace PatientPortalAPI.Infrastructure.Security;
 
 public class EncryptionService(IConfiguration configuration) : IEncryptionService
 {
-    private readonly string _key = configuration["Security:EncryptionKey"] ?? "350e9325-3b95-460d-8526-976219808d75"; // 32 chars for AES-256
+    private readonly string _key = configuration[SecretKeys.EncryptionKey] ?? "350e9325-3b95-460d-8526-976219808d75"; // 32 chars for AES-256
 
     public string Encrypt(string plainText)
     {

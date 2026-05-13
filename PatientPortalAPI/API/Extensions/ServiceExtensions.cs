@@ -53,9 +53,23 @@ public static class ServiceExtensions
 
     public static async Task AddKeyVaultConfiguration(this WebApplicationBuilder builder)
     {
-        var keyVault = new KeyVaultConfigExtensions(builder.Configuration);
-        var secrets = await keyVault.LoadSecretsAsync();
-        builder.Configuration.AddInMemoryCollection(secrets!);
+        var isEnabled = builder.Configuration.GetValue<bool>("AzureKeyVault:Enabled");
+        
+        if (isEnabled)
+        {
+            var keyVault = new KeyVaultConfigExtensions(builder.Configuration);
+            var secrets = await keyVault.LoadSecretsAsync();
+            
+            if (secrets != null && secrets.Any())
+            {
+                builder.Configuration.AddInMemoryCollection(secrets!);
+                Log.Information("Successfully loaded configuration from Azure Key Vault.");
+            }
+        }
+        else
+        {
+            Log.Information("Azure Key Vault is disabled. Using local configuration.");
+        }
     }
 
     public static void ConfigureSwagger(this IServiceCollection services)

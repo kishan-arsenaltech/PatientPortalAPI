@@ -1,6 +1,7 @@
-﻿using Azure.Identity;
+using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
 using PatientPortalAPI.Core.Application.Constants;
+using Serilog;
 
 namespace PatientPortalAPI.API.Extensions
 {
@@ -11,36 +12,51 @@ namespace PatientPortalAPI.API.Extensions
 
         public KeyVaultConfigExtensions(IConfiguration configuration)
         {
-            _environment = configuration["environment:name"]!;
+            _environment = configuration["environment:name"] ?? "dev";
 
             var vaultName = configuration["AzureKeyVault:Vault"];
             var tenantId = configuration["AzureKeyVault:TenantId"];
             var clientId = configuration["AzureKeyVault:ClientId"];
             var clientSecret = configuration["AzureKeyVault:ClientSecret"];
 
-            var credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
-            _client = new SecretClient(new Uri(vaultName!), credential);
+            if (!string.IsNullOrEmpty(vaultName) && !string.IsNullOrEmpty(tenantId) && 
+                !string.IsNullOrEmpty(clientId) && !string.IsNullOrEmpty(clientSecret))
+            {
+                var credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
+                _client = new SecretClient(new Uri($"https://{vaultName}"), credential);
+            }
         }
 
-        public async Task<IDictionary<string, string>> LoadSecretsAsync()
+        public async Task<IDictionary<string, string>?> LoadSecretsAsync()
         {
-            var keys = new[]
-            {
-                Env(SecretKeys.SqlConnection),
-                Env(SecretKeys.JwtIssuer),
-                Env(SecretKeys.JwtSecret),
-                Env(SecretKeys.JwtExpiresIn)
-            };
+            if (_client == null) return null;
 
-            var secrets = new Dictionary<string, string>();
-
-            foreach (var key in keys)
+            try 
             {
-                var value = (await _client.GetSecretAsync(key)).Value.Value;
-                secrets[NormalizeKey(key)] = value;
+                var keys = new[]
+                {
+                    Env(SecretKeys.SqlConnection),
+                    Env(SecretKeys.JwtIssuer),
+                    Env(SecretKeys.JwtSecret),
+                    Env(SecretKeys.JwtExpiresIn),
+                    Env(SecretKeys.EncryptionKey)
+                };
+
+                var secrets = new Dictionary<string, string>();
+
+                foreach (var key in keys)
+                {
+                    var response = await _client.GetSecretAsync(key);
+                    secrets[NormalizeKey(key)] = response.Value.Value;
+                }
+
+                return secrets;
             }
-
-            return secrets;
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to load secrets from Azure Key Vault. Falling back to local configuration.");
+                return null;
+            }
         }
 
         private string Env(string key)

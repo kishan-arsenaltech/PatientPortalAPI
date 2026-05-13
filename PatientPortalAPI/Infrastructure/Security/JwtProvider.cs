@@ -6,14 +6,9 @@ using PatientPortalAPI.Core.Application.Settings;
 
 namespace PatientPortalAPI.Infrastructure.Security;
 
-public class JwtProvider : IJwtProvider
+public class JwtProvider(JwtConfig jwtConfig) : IJwtProvider
 {
-    private readonly JwtConfig _jwtConfig;
-
-    public JwtProvider(IConfiguration configuration)
-    {
-        _jwtConfig = configuration.GetSection("JwtConfig").Get<JwtConfig>() ?? throw new Exception("JwtConfig is missing");
-    }
+    private readonly JwtConfig _jwtConfig = jwtConfig;
 
     public string GenerateToken(Guid userId, string email, Guid tenantId, IEnumerable<string> roles)
     {
