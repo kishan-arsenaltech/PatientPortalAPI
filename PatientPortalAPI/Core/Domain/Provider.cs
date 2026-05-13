@@ -15,4 +15,5 @@ public class Provider : BaseEntity
     public string? Specialty { get; set; }
     public string? Email { get; set; }
     public string? Phone { get; set; }
+    public bool IsActive { get; set; } = true;
 }

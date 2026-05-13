@@ -33,11 +33,25 @@ public class GenericRepository<T>(IDbConnectionFactory connectionFactory) : IGen
     public virtual async Task<Guid> AddAsync(T entity)
     {
         using var connection = _connectionFactory.CreateConnection();
+        
+        var entityProperties = typeof(T).GetProperties();
+        var primaryKeyProp = entityProperties.First(p => p.Name.EndsWith("ID") && p.Name != "TenantID");
+
+        if (primaryKeyProp.PropertyType == typeof(Guid))
+        {
+            var currentId = (Guid)primaryKeyProp.GetValue(entity)!;
+            if (currentId == Guid.Empty)
+            {
+                var newId = Guid.NewGuid();
+                primaryKeyProp.SetValue(entity, newId);
+            }
+        }
+
         var properties = GetProperties(entity);
         var columnNames = string.Join(", ", properties.Select(p => $"[{p}]"));
         var parameterNames = string.Join(", ", properties.Select(p => $"@{p}"));
         
-        var primaryKey = typeof(T).GetProperties().First(p => p.Name.EndsWith("ID")).Name;
+        var primaryKey = primaryKeyProp.Name;
         
         var sql = $"INSERT INTO {FullTableName} ({columnNames}) OUTPUT INSERTED.{primaryKey} VALUES ({parameterNames})";
         
@@ -50,9 +64,12 @@ public class GenericRepository<T>(IDbConnectionFactory connectionFactory) : IGen
         var properties = GetProperties(entity);
         var primaryKey = typeof(T).GetProperties().First(p => p.Name.EndsWith("ID")).Name;
         
-        var setClause = string.Join(", ", properties.Where(p => p != primaryKey).Select(p => $"[{p}] = @{p}"));
+        var hasUpdatedAt = typeof(T).GetProperty("UpdatedAt") != null;
+        var setUpdatedAt = hasUpdatedAt ? ", UpdatedAt = SYSDATETIMEOFFSET()" : "";
         
-        var sql = $"UPDATE {FullTableName} SET {setClause}, UpdatedAt = SYSDATETIMEOFFSET() WHERE {primaryKey} = @{primaryKey}";
+        var setClause = string.Join(", ", properties.Where(p => p != primaryKey && p != "UpdatedAt").Select(p => $"[{p}] = @{p}"));
+        
+        var sql = $"UPDATE {FullTableName} SET {setClause}{setUpdatedAt} WHERE {primaryKey} = @{primaryKey}";
         
         var result = await connection.ExecuteAsync(sql, entity);
         return result > 0;
@@ -62,7 +79,11 @@ public class GenericRepository<T>(IDbConnectionFactory connectionFactory) : IGen
     {
         using var connection = _connectionFactory.CreateConnection();
         var primaryKey = typeof(T).GetProperties().First(p => p.Name.EndsWith("ID")).Name;
-        var sql = $"UPDATE {FullTableName} SET DeletedAt = SYSDATETIMEOFFSET(), IsActive = 0 WHERE {primaryKey} = @Id";
+        
+        var hasIsActive = typeof(T).GetProperty("IsActive") != null;
+        var setIsActive = hasIsActive ? ", IsActive = 0" : "";
+        
+        var sql = $"UPDATE {FullTableName} SET DeletedAt = SYSDATETIMEOFFSET(){setIsActive} WHERE {primaryKey} = @Id";
         var result = await connection.ExecuteAsync(sql, new { Id = id });
         return result > 0;
     }

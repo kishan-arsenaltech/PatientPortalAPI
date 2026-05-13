@@ -6,12 +6,6 @@ using Dapper;
 
 namespace PatientPortalAPI.Infrastructure.Data.Repositories;
 
-public interface IPatientRepository : IGenericRepository<Patient>
-{
-    Task<IEnumerable<Patient>> SearchByNameAsync(string searchTerm);
-    Task<Patient?> GetByPatientNumberAsync(string patientNumber);
-}
-
 public class PatientRepository(IDbConnectionFactory connectionFactory, IEncryptionService encryptionService) 
     : GenericRepository<Patient>(connectionFactory), IPatientRepository
 {

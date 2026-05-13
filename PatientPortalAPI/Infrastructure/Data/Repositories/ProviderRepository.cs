@@ -5,11 +5,6 @@ using Dapper;
 
 namespace PatientPortalAPI.Infrastructure.Data.Repositories;
 
-public interface IProviderRepository : IGenericRepository<Provider>
-{
-    Task<Provider?> GetByNpiAsync(string npi);
-}
-
 public class ProviderRepository(IDbConnectionFactory connectionFactory) : GenericRepository<Provider>(connectionFactory), IProviderRepository
 {
     public async Task<Provider?> GetByNpiAsync(string npi)

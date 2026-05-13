@@ -5,11 +5,6 @@ using Dapper;
 
 namespace PatientPortalAPI.Infrastructure.Data.Repositories;
 
-public interface IOrderRepository : IGenericRepository<Order>
-{
-    Task<IEnumerable<Order>> GetByPatientIdAsync(Guid patientId);
-}
-
 public class OrderRepository(IDbConnectionFactory connectionFactory) : GenericRepository<Order>(connectionFactory), IOrderRepository
 {
     public async Task<IEnumerable<Order>> GetByPatientIdAsync(Guid patientId)

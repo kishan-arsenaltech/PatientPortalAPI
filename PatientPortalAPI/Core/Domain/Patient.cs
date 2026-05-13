@@ -7,7 +7,9 @@ public class Patient : BaseEntity
 {
     public Guid PatientID { get; set; }
     public Guid? OrganizationID { get; set; }
+    [NotMapped]
     public string? PatientNumber { get; set; } // Computed in SQL
+    [NotMapped]
     public int PatientSeq { get; set; } // Identity in SQL
     public string FirstName { get; set; } = string.Empty;
     public string? MiddleName { get; set; }
@@ -38,4 +40,8 @@ public class Patient : BaseEntity
     public string? BrightreePatientID { get; set; }
     public string? ExternalPatientID { get; set; }
     public string? Notes { get; set; }
+    public bool IsActive { get; set; } = true;
+    public Guid? CreatedByUserID { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
+    public Guid? UpdatedByUserID { get; set; }
 }

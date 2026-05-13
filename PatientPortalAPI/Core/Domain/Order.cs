@@ -21,4 +21,6 @@ public class Order : BaseEntity
     public string? ResupplyFreq { get; set; }
     public string? Notes { get; set; }
     public string? ExternalOrderID { get; set; }
+    public Guid? CreatedByUserID { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 }

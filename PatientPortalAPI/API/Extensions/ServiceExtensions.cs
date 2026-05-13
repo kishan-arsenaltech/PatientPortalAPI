@@ -23,6 +23,7 @@ public static class ServiceExtensions
         services.AddScoped<IProviderRepository, ProviderRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IReferralRepository, ReferralRepository>();
+        services.AddScoped<IAuthRepository, AuthRepository>();
 
         // Security
         services.AddScoped<IEncryptionService, EncryptionService>();

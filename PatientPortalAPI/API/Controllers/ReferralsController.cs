@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using PatientPortalAPI.Core.Application.Interfaces;
 using PatientPortalAPI.Core.Domain;
-using PatientPortalAPI.Infrastructure.Data.Repositories;
 
 namespace PatientPortalAPI.API.Controllers;
 

@@ -31,4 +31,6 @@ public class Referral : BaseEntity
     public DateTimeOffset? ClosedAt { get; set; }
     public Guid? ClosedByUserID { get; set; }
     public string? ClosureReason { get; set; }
+    public Guid? CreatedByUserID { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 }
